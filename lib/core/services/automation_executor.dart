@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../core/app_logger.dart';
 
-typedef AutomationOperation = Future<void> Function();
+typedef AutomationOperation = Future<Object?> Function();
 
 /// Reusable execution primitives shared by the desktop automation runner.
 ///
