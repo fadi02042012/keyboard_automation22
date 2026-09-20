@@ -196,6 +196,7 @@ int TitleMatchScore(const std::string& actual, const std::string& requested) {
 }
 
 std::map<std::string, HWND> g_window_affinity;
+std::map<std::string, HWND> g_process_affinity;
 
 std::string ProcessAliasForTitle(const std::string& requested) {
   const std::string title = LowerAscii(requested);
@@ -257,6 +258,21 @@ bool ActivateWindowByTitle(const std::string& target_title) {
   }
 
   const auto windows = GetOpenWindows();
+
+  // Prefer the last browser HWND when its title has changed.
+  const std::string process_alias = ProcessAliasForTitle(target_title);
+  if (!process_alias.empty()) {
+    const auto process_affinity = g_process_affinity.find(process_alias);
+    if (process_affinity != g_process_affinity.end()) {
+      const HWND cached = process_affinity->second;
+      if (IsUsableApplicationWindow(cached) && SetForegroundReliable(cached)) {
+        g_window_affinity[target_title] = cached;
+        return true;
+      }
+      g_process_affinity.erase(process_affinity);
+    }
+  }
+
   const WindowInfo* best_match = nullptr;
   int best_score = 0;
   for (const auto& window : windows) {
@@ -274,6 +290,8 @@ bool ActivateWindowByTitle(const std::string& target_title) {
 
   const HWND hwnd = best_match->hwnd;
   g_window_affinity[target_title] = hwnd;
+  const std::string matched_alias = ProcessAliasForTitle(target_title);
+  if (!matched_alias.empty()) g_process_affinity[matched_alias] = hwnd;
   if (IsIconic(hwnd)) {
     ShowWindow(hwnd, SW_RESTORE);
   } else {
