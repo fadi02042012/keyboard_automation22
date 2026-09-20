@@ -36,7 +36,9 @@ class Scenario {
       }
     }
     return Scenario(
-      id: AutomationStep.asString(json['id'], '${DateTime.now().microsecondsSinceEpoch}'),
+      id: json['id'] == null || json['id'].toString().trim().isEmpty
+          ? '${DateTime.now().microsecondsSinceEpoch}'
+          : json['id'].toString(),
       name: AutomationStep.asString(json['name'], 'سيناريو غير مسمى').trim(),
       steps: steps,
     );
