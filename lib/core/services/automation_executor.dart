@@ -18,7 +18,6 @@ class AutomationExecutor {
 
   final int Function() _maxRetries;
   final bool Function() _fastMode;
-  });
 
   final bool Function() isRunning;
   Future<void> wait(int milliseconds) async {
