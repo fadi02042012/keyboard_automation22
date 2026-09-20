@@ -577,20 +577,8 @@ class _AutomationHomePageState extends State<AutomationHomePage> {
 
   // ==================== دوال الانتظار ====================
   Future<void> _wait(int ms) async {
-    if (ms <= 0 || !_running) return;
-    final completer = Completer<void>();
-    _pendingDelay = completer;
-    _delayTimer?.cancel();
-    _delayTimer = Timer(Duration(milliseconds: ms), () {
-      if (!completer.isCompleted) completer.complete();
-    });
-    try {
-      await completer.future;
-    } catch (e) {
-      // تجاهل الأخطاء عند الإلغاء
-    } finally {
-      if (identical(_pendingDelay, completer)) _pendingDelay = null;
-    }
+    if (ms <= 0 || !_running || _stopRequested) return;
+    await _executor.wait(ms);
   }
 
   List<AutomationStep> _cloneSteps(List<AutomationStep> source) {
