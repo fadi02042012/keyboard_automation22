@@ -291,7 +291,10 @@ class AutomationStep {
 
   factory AutomationStep.fromJson(Map<String, dynamic> json) {
     final action = asString(json['action'], 'text').trim().toLowerCase();
-    final id = asString(json['id'], '${DateTime.now().microsecondsSinceEpoch}_${_idCounter++}');
+    final rawId = json['id'];
+    final id = rawId == null || rawId.toString().trim().isEmpty
+        ? '${DateTime.now().microsecondsSinceEpoch}_${_idCounter++}'
+        : rawId.toString();
     final type = _getTypeFromAction(action);
     final modifiers = _asStringList(json['modifiers']);
     final windowChanged = _asBool(json['windowChanged'] ?? json['window_changed']);
