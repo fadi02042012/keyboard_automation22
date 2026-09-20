@@ -196,6 +196,7 @@ int TitleMatchScore(const std::string& actual, const std::string& requested) {
 }
 
 std::map<std::string, HWND> g_window_affinity;
+HWND g_last_observed_window = nullptr;
 
 std::string ProcessAliasForTitle(const std::string& requested) {
   const std::string title = LowerAscii(requested);
@@ -234,6 +235,7 @@ WindowInfo GetActiveWindowInfo() {
   if (hwnd == nullptr || !IsUsableApplicationWindow(hwnd)) {
     return WindowInfo{};
   }
+  g_last_observed_window = hwnd;
   return ReadWindowInfo(hwnd);
 }
 
@@ -258,6 +260,19 @@ bool ActivateWindowByTitle(const std::string& target_title) {
 
   const auto windows = GetOpenWindows();
   const std::string process_alias = ProcessAliasForTitle(target_title);
+
+  // When a browser title changes, keep the last observed HWND as the
+  // continuity anchor. This is safer than process affinity because one
+  // browser process may own several unrelated top-level windows.
+  if (!process_alias.empty() &&
+      g_last_observed_window != nullptr &&
+      IsUsableApplicationWindow(g_last_observed_window)) {
+    const WindowInfo last = ReadWindowInfo(g_last_observed_window);
+    if (ProcessMatchScore(last, target_title) > 0) {
+      g_window_affinity[target_title] = g_last_observed_window;
+      if (SetForegroundReliable(g_last_observed_window)) return true;
+    }
+  }
 
   // If the recorded title has changed (common with browser tabs), the
   // currently foreground window is the safest identity to preserve. Do not
