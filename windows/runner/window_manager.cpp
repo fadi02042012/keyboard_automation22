@@ -196,7 +196,6 @@ int TitleMatchScore(const std::string& actual, const std::string& requested) {
 }
 
 std::map<std::string, HWND> g_window_affinity;
-std::map<std::string, HWND> g_process_affinity;
 
 std::string ProcessAliasForTitle(const std::string& requested) {
   const std::string title = LowerAscii(requested);
@@ -258,40 +257,55 @@ bool ActivateWindowByTitle(const std::string& target_title) {
   }
 
   const auto windows = GetOpenWindows();
-
-  // Prefer the last browser HWND when its title has changed.
   const std::string process_alias = ProcessAliasForTitle(target_title);
+
+  // If the recorded title has changed (common with browser tabs), the
+  // currently foreground window is the safest identity to preserve. Do not
+  // cache by process name: one process can own many independent windows.
   if (!process_alias.empty()) {
-    const auto process_affinity = g_process_affinity.find(process_alias);
-    if (process_affinity != g_process_affinity.end()) {
-      const HWND cached = process_affinity->second;
-      if (IsUsableApplicationWindow(cached) && SetForegroundReliable(cached)) {
-        g_window_affinity[target_title] = cached;
-        return true;
-      }
-      g_process_affinity.erase(process_affinity);
+    const WindowInfo active = GetActiveWindowInfo();
+    if (active.hwnd != nullptr &&
+        ProcessMatchScore(active, target_title) > 0 &&
+        IsUsableApplicationWindow(active.hwnd)) {
+      g_window_affinity[target_title] = active.hwnd;
+      return true;
     }
   }
 
   const WindowInfo* best_match = nullptr;
   int best_score = 0;
+  int process_candidates = 0;
+  const WindowInfo* only_process_candidate = nullptr;
+
   for (const auto& window : windows) {
     const int title_score = TitleMatchScore(window.title, target_title);
     const int process_score = ProcessMatchScore(window, target_title);
-    // Prefer a reliable title match. Use the process alias only when the
-    // recorded tab title is no longer present in the current window title.
-    const int score = title_score > 0 ? title_score : process_score;
-    if (score > best_score) {
-      best_score = score;
+
+    if (process_score > 0) {
+      process_candidates++;
+      only_process_candidate = &window;
+    }
+
+    // A real title match always wins over process-only matching.
+    if (title_score > best_score) {
+      best_score = title_score;
       best_match = &window;
     }
   }
-  if (best_match == nullptr || best_match->hwnd == nullptr) return false;
+
+  // Only use process identity as a fallback when there is exactly one
+  // matching application window. This prevents Chrome/Edge window mix-ups.
+  if (best_match == nullptr && process_candidates == 1) {
+    best_match = only_process_candidate;
+    best_score = ProcessMatchScore(*best_match, target_title);
+  }
+
+  if (best_match == nullptr || best_match->hwnd == nullptr || best_score <= 0) {
+    return false;
+  }
 
   const HWND hwnd = best_match->hwnd;
   g_window_affinity[target_title] = hwnd;
-  const std::string matched_alias = ProcessAliasForTitle(target_title);
-  if (!matched_alias.empty()) g_process_affinity[matched_alias] = hwnd;
   if (IsIconic(hwnd)) {
     ShowWindow(hwnd, SW_RESTORE);
   } else {
