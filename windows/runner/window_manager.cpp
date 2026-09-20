@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include <map>
 
 #pragma comment(lib, "psapi.lib")
 
@@ -178,6 +179,8 @@ int TitleMatchScore(const std::string& actual, const std::string& requested) {
   return 0;
 }
 
+std::map<std::string, HWND> g_window_affinity;
+
 std::string ProcessAliasForTitle(const std::string& requested) {
   const std::string title = LowerAscii(requested);
   if (title.find("google chrome") != std::string::npos ||
@@ -225,6 +228,18 @@ bool WindowTitlesMatch(const std::string& actual_title, const std::string& reque
 bool ActivateWindowByTitle(const std::string& target_title) {
   if (target_title.empty()) return false;
 
+  // Keep runtime affinity so a browser window can continue to be targeted
+  // after its title changes, e.g. New Tab -> a website title.
+  const auto affinity = g_window_affinity.find(target_title);
+  if (affinity != g_window_affinity.end()) {
+    const HWND cached = affinity->second;
+    if (IsUsableApplicationWindow(cached)) {
+      if (SetForegroundReliable(cached)) return true;
+    } else {
+      g_window_affinity.erase(affinity);
+    }
+  }
+
   const auto windows = GetOpenWindows();
   const WindowInfo* best_match = nullptr;
   int best_score = 0;
@@ -242,6 +257,7 @@ bool ActivateWindowByTitle(const std::string& target_title) {
   if (best_match == nullptr || best_match->hwnd == nullptr) return false;
 
   const HWND hwnd = best_match->hwnd;
+  g_window_affinity[target_title] = hwnd;
   if (IsIconic(hwnd)) {
     ShowWindow(hwnd, SW_RESTORE);
   } else {
