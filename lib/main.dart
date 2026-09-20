@@ -15,6 +15,7 @@ import 'core/models/scenario.dart';
 import 'core/models/shortcut.dart';
 import 'core/controllers/scenario_editor_controller.dart';
 import 'core/services/native_automation_service.dart';
+import 'core/services/automation_executor.dart';
 import 'core/services/scenario_storage.dart';
 import 'core/services/scenario_file_service.dart';
 
@@ -80,6 +81,7 @@ class AutomationHomePage extends StatefulWidget {
 
 class _AutomationHomePageState extends State<AutomationHomePage> {
   final NativeAutomationService _nativeAutomation = nativeAutomationService;
+  late final AutomationExecutor _executor;
   final ScenarioStorage _scenarioStorage = const ScenarioStorage();
   final ScenarioFileService _scenarioFileService = const ScenarioFileService();
   final ScenarioEditorController _editorController = ScenarioEditorController();
@@ -598,6 +600,11 @@ class _AutomationHomePageState extends State<AutomationHomePage> {
   // ==================== دورة حياة التطبيق ====================
   @override
   void initState() {
+    _executor = AutomationExecutor(
+      isRunning: () => _running && !_stopRequested,
+      maxRetries: _maxRetries,
+      fastMode: _useFastMode,
+    );
     super.initState();
     _loadAppSettings();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -968,6 +975,15 @@ Get-Process | Where-Object {
     Map<String, dynamic> arguments, {
     required String action,
     Duration timeout = const Duration(seconds: 5),
+  }) {
+    return _executor.invokeWithRetry(
+      action: action,
+      timeout: timeout,
+      operation: () => _nativeAutomation.invokeAutomation<dynamic>(
+        method,
+        arguments,
+      ),
+    );
   }) async {
     final attempts = max(1, _maxRetries);
     Object? lastError;
