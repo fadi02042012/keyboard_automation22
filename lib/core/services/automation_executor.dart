@@ -11,14 +11,16 @@ typedef AutomationOperation = Future<void> Function();
 class AutomationExecutor {
   AutomationExecutor({
     required this.isRunning,
-    this.maxRetries = 3,
-    this.fastMode = false,
+    int Function()? maxRetries,
+    bool Function()? fastMode,
+  })  : _maxRetries = maxRetries ?? (() => 3),
+        _fastMode = fastMode ?? (() => false);
+
+  final int Function() _maxRetries;
+  final bool Function() _fastMode;
   });
 
   final bool Function() isRunning;
-  final int maxRetries;
-  final bool fastMode;
-
   Future<void> wait(int milliseconds) async {
     if (milliseconds <= 0 || !isRunning()) return;
     await Future<void>.delayed(Duration(milliseconds: milliseconds));
@@ -29,7 +31,8 @@ class AutomationExecutor {
     required AutomationOperation operation,
     Duration timeout = const Duration(seconds: 5),
   }) async {
-    final attempts = maxRetries < 1 ? 1 : maxRetries;
+    final configuredRetries = _maxRetries();
+    final attempts = configuredRetries < 1 ? 1 : configuredRetries;
     Object? lastError;
     StackTrace? lastStackTrace;
 
@@ -60,7 +63,7 @@ class AutomationExecutor {
       }
 
       if (!isRunning() || attempt + 1 >= attempts) break;
-      final backoffMs = fastMode ? 20 : (50 * (attempt + 1)).clamp(50, 250);
+      final backoffMs = _fastMode() ? 20 : (50 * (attempt + 1)).clamp(50, 250);
       await wait(backoffMs);
     }
 
