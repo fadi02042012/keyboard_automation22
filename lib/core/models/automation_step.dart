@@ -140,6 +140,9 @@ class AutomationStep {
   }
 
   Map<String, dynamic> toJson() => {
+        // Keep the stable step id in persisted files so editor state, logs,
+        // and future references remain attached to the same step after import.
+        'id': id,
         'action': _getActionName(type),
         if (type == StepType.text) ...{
           'value': text,
