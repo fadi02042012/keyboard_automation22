@@ -866,10 +866,10 @@ Get-Process | Where-Object {
   }
 
   bool _activeWindowMatches(String requestedTitle, String activeTitle, String activeProcess) {
-    if (_windowTitlesMatch(requestedTitle, activeTitle)) return true;
-    final expectedProcess = _expectedProcessForWindowTitle(requestedTitle);
-    if (expectedProcess.isEmpty) return false;
-    return activeProcess.trim().toLowerCase() == expectedProcess;
+    // Process name is not a unique window identity (Chrome/Edge may have
+    // several windows in the same process). Verification must therefore use
+    // the actual title; native activation preserves the HWND affinity.
+    return _windowTitlesMatch(requestedTitle, activeTitle);
   }
 
   Future<bool> _isActiveWindowExpected(String windowTitle) async {
