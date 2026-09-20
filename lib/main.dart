@@ -602,8 +602,8 @@ class _AutomationHomePageState extends State<AutomationHomePage> {
   void initState() {
     _executor = AutomationExecutor(
       isRunning: () => _running && !_stopRequested,
-      maxRetries: _maxRetries,
-      fastMode: _useFastMode,
+      maxRetries: () => _maxRetries,
+      fastMode: () => _useFastMode,
     );
     super.initState();
     _loadAppSettings();
