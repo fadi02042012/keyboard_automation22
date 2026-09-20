@@ -967,24 +967,44 @@ Get-Process | Where-Object {
     String method,
     Map<String, dynamic> arguments, {
     required String action,
+    Duration timeout = const Duration(seconds: 5),
   }) async {
     final attempts = max(1, _maxRetries);
     Object? lastError;
+
     for (var attempt = 0; attempt < attempts; attempt++) {
-      if (!_running) return;
+      if (!_running || _stopRequested) return;
+
       try {
-        await _nativeAutomation.invokeAutomation(method, arguments);
+        await _nativeAutomation
+            .invokeAutomation<dynamic>(method, arguments)
+            .timeout(timeout);
         return;
-      } catch (error) {
+      } on TimeoutException catch (error, stackTrace) {
+        lastError = error;
+        AppLogger.warning(
+          '$action timed out on attempt ${attempt + 1}/$attempts.',
+          error: error,
+          stackTrace: stackTrace,
+          name: 'automation',
+        );
+      } catch (error, stackTrace) {
         lastError = error;
         AppLogger.warning(
           '$action attempt ${attempt + 1}/$attempts failed.',
           error: error,
+          stackTrace: stackTrace,
           name: 'automation',
         );
-        if (attempt + 1 < attempts) await _wait(_useFastMode ? 20 : 50);
+      }
+
+      if (!_running || _stopRequested) return;
+      if (attempt + 1 < attempts) {
+        final backoffMs = _useFastMode ? 20 : min(250, 50 * (attempt + 1));
+        await _wait(backoffMs);
       }
     }
+
     throw lastError ?? Exception('$action failed');
   }
 
