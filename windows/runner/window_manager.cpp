@@ -145,7 +145,22 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam) {
   return TRUE;
 }
 
+std::string RemoveUnicodeDirectionMarks(std::string value) {
+  static const std::vector<std::string> marks = {
+      "\xE2\x80\x8E", "\xE2\x80\x8F", "\xE2\x80\AA", "\xE2\x80\AB",
+      "\xE2\x80\AC", "\xE2\x80\AD", "\xE2\x80\AE", "\xE2\x81\xA6",
+      "\xE2\x81\xA7", "\xE2\x81\xA8", "\xE2\x81\xA9"};
+  for (const auto& mark : marks) {
+    size_t position = 0;
+    while ((position = value.find(mark, position)) != std::string::npos) {
+      value.erase(position, mark.size());
+    }
+  }
+  return value;
+}
+
 std::string LowerAscii(std::string value) {
+  value = RemoveUnicodeDirectionMarks(std::move(value));
   std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) {
     if (character >= 'A' && character <= 'Z') {
       return static_cast<char>(character - 'A' + 'a');
@@ -156,13 +171,14 @@ std::string LowerAscii(std::string value) {
 }
 
 std::string MeaningfulTitleFragment(const std::string& value) {
-  const size_t open = value.find_last_of('[');
-  const size_t close = value.find_last_of(']');
+  const std::string normalized = RemoveUnicodeDirectionMarks(value);
+  const size_t open = normalized.find_last_of('[');
+  const size_t close = normalized.find_last_of(']');
   if (open != std::string::npos && close != std::string::npos && open < close) {
-    const std::string fragment = value.substr(open + 1, close - open - 1);
+    const std::string fragment = normalized.substr(open + 1, close - open - 1);
     if (fragment.size() >= 3) return fragment;
   }
-  return value;
+  return normalized;
 }
 
 int TitleMatchScore(const std::string& actual, const std::string& requested) {
