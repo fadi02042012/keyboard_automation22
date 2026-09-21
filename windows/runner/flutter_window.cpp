@@ -138,8 +138,15 @@ void FlutterWindow::OnMethodCall(
                 result->Error("INVALID_ARGUMENTS", "windowAlias or windowTitle is required");
                 return;
             }
+            std::string matchMode = "title";
+            auto modeIt = args->find(flutter::EncodableValue("windowMatch"));
+            if (modeIt != args->end()) {
+                if (const auto* value = std::get_if<std::string>(&modeIt->second)) {
+                    matchMode = *value;
+                }
+            }
             const bool activated = !windowAlias.empty()
-                ? ActivateWindowByAlias(windowAlias, windowTitle)
+                ? ActivateWindowByAlias(windowAlias, windowTitle, matchMode)
                 : ActivateWindowByTitle(windowTitle);
             result->Success(flutter::EncodableValue(activated));
             return;
