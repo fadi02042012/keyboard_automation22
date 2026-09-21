@@ -2375,12 +2375,18 @@ Get-Process | Where-Object {
   Widget _buildStepWindowSelector({
     required String selectedWindow,
     required ValueChanged<String?> onChanged,
+    String initialMatch = 'title',
+    ValueChanged<String?>? onMatchChanged,
   }) {
     final availableWindows = _uniqueOpenWindows();
     final availableTitles = availableWindows.map((window) => window['title']!).toList();
     final value = availableTitles.contains(selectedWindow) ? selectedWindow : null;
+    final matchMode = initialMatch == 'process' ? 'process' : 'title';
 
-    return DropdownButtonFormField<String>(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<String>(
       initialValue: value,
       isExpanded: true,
       decoration: const InputDecoration(
@@ -2404,6 +2410,19 @@ Get-Process | Where-Object {
         );
       }).toList(),
       onChanged: _openWindows.isEmpty ? null : onChanged,
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment<String>(value: 'title', icon: Icon(Icons.window_outlined), label: Text('اسم النافذة')),
+            ButtonSegment<String>(value: 'process', icon: Icon(Icons.apps_outlined), label: Text('اسم البرنامج')),
+          ],
+          selected: {matchMode},
+          onSelectionChanged: onMatchChanged == null
+              ? null
+              : (selection) => onMatchChanged(selection.first),
+        ),
+      ],
     );
   }
 
