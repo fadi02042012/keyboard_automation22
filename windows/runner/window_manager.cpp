@@ -150,8 +150,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam) {
 
 std::string RemoveUnicodeDirectionMarks(std::string value) {
   static const std::vector<std::string> marks = {
-      "\xE2\x80\x8E", "\xE2\x80\x8F", "\xE2\x80\AA", "\xE2\x80\AB",
-      "\xE2\x80\AC", "\xE2\x80\AD", "\xE2\x80\AE", "\xE2\x81\xA6",
+      "\xE2\x80\x8E", "\xE2\x80\x8F", "\xE2\x80\xAA", "\xE2\x80\xAB",
+      "\xE2\x80\xAC", "\xE2\x80\xAD", "\xE2\x80\xAE", "\xE2\x81\xA6",
       "\xE2\x81\xA7", "\xE2\x81\xA8", "\xE2\x81\xA9"};
   for (const auto& mark : marks) {
     size_t position = 0;
