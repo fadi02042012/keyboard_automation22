@@ -790,7 +790,9 @@ Get-Process | Where-Object {
     if (identical(a, b)) return true;
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
-      if (a[i]['title'] != b[i]['title'] || a[i]['process'] != b[i]['process']) {
+      if (a[i]['title'] != b[i]['title'] ||
+          a[i]['process'] != b[i]['process'] ||
+          a[i]['hwnd'] != b[i]['hwnd']) {
         return false;
       }
     }
@@ -987,6 +989,23 @@ Get-Process | Where-Object {
       if (title.isNotEmpty) unique.putIfAbsent(title, () => window);
     }
     return unique.values.toList();
+  }
+
+  String _windowIdForTitle(String title) {
+    final normalized = title.trim();
+    if (normalized.isEmpty) return '';
+    for (final window in _openWindows) {
+      if ((window['title'] ?? '').trim() == normalized) {
+        return window['hwnd']?.trim() ?? '';
+      }
+    }
+    return '';
+  }
+
+  String _windowIdForSelection(String selectedWindow, String explicitAlias) {
+    final alias = explicitAlias.trim();
+    if (alias.isNotEmpty) return alias;
+    return _windowIdForTitle(selectedWindow);
   }
 
   String _inheritedTargetWindowForNewStep() {
@@ -2256,7 +2275,10 @@ Get-Process | Where-Object {
                   id: existing?.id ?? _newId(),
                   type: StepType.semanticCommand,
                   targetWindow: selectedWindow.trim(),
-                  windowAlias: windowAliasController.text.trim(),
+                  windowAlias: _windowIdForSelection(
+                    selectedWindow,
+                    windowAliasController.text,
+                  ),
                   command: command,
                   commandArguments: args,
                   delayMs: max(0, int.tryParse(delayController.text) ?? 200),
@@ -2790,7 +2812,10 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
-                        'windowAlias': windowAliasController.text.trim(),
+                        'windowAlias': _windowIdForSelection(
+                          selectedWindow,
+                          windowAliasController.text,
+                        ),
                       });
                     },
                     icon: const Icon(Icons.save),
@@ -4022,7 +4047,9 @@ Get-Process | Where-Object {
           step.type == StepType.mouse ||
           step.type == StepType.waitForWindow ||
           step.type == StepType.semanticCommand;
-      return needsWindow && step.targetWindow.trim().isEmpty;
+      return needsWindow &&
+          step.targetWindow.trim().isEmpty &&
+          step.windowAlias.trim().isEmpty;
     });
 
     if (needsFallbackWindow &&
@@ -4108,6 +4135,7 @@ Get-Process | Where-Object {
                 step.type == StepType.waitForWindow ||
                 step.type == StepType.semanticCommand;
             final savedTarget = step.targetWindow.trim();
+            final windowId = step.windowAlias.trim();
             final targetWindow = savedTarget.isNotEmpty
                 ? savedTarget
                 : (fallbackTargetWindow ?? '');
@@ -4173,6 +4201,7 @@ Get-Process | Where-Object {
               try {
           await _nativeAutomation.executeSemanticCommand(
             windowTitle: step.targetWindow,
+            windowAlias: step.windowAlias,
             command: step.command,
             arguments: step.commandArguments,
             waitTimeoutMs: step.waitTimeoutMs,
