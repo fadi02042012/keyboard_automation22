@@ -4146,7 +4146,7 @@ Get-Process | Where-Object {
                 step.previousWindow!.trim() != targetWindow;
 
             if (needsWindow) {
-              if (targetWindow.isEmpty) {
+              if (targetWindow.isEmpty && windowId.isEmpty) {
                 continue;
               }
 
@@ -4173,6 +4173,7 @@ Get-Process | Where-Object {
               } else {
                 final targetReady = await _waitForWindow(
                   targetWindow,
+                  windowAlias: windowId,
                   timeoutMs: step.type == StepType.waitForWindow
                       ? step.waitTimeoutMs
                       : 5000,
