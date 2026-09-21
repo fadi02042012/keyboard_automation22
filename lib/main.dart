@@ -1002,12 +1002,6 @@ Get-Process | Where-Object {
     return '';
   }
 
-  String _windowIdForSelection(String selectedWindow, String explicitAlias) {
-    final alias = explicitAlias.trim();
-    if (alias.isNotEmpty) return alias;
-    return _windowIdForTitle(selectedWindow);
-  }
-
   String _windowIdentityForSelection(
     String selectedWindow,
     String matchMode,
@@ -5388,16 +5382,13 @@ Get-Process | Where-Object {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (compactLayout)
-                  SizedBox(
-                    height: 250,
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      child: topControls,
-                    ),
-                  )
-                else
-                  topControls,
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: topControls,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Expanded(child: buildStepList()),
               ],
