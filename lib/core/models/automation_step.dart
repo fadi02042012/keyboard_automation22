@@ -283,7 +283,7 @@ class AutomationStep {
         modifiers: _asStringList(event['modifiers'] ?? event['modifierKeys']),
         delayMs: delayMs,
         targetWindow: recordedWindow,
-        windowAlias: asString(event['windowAlias'] ?? event['window_alias']),
+        windowAlias: asString(event['windowId'] ?? event['windowAlias'] ?? event['window_alias']),
         windowMatch: asString(event['windowMatch'] ?? event['window_match'], 'title'),
         windowChanged: windowChanged,
         previousWindow: previousWindow.isEmpty ? null : previousWindow,
@@ -369,7 +369,7 @@ class AutomationStep {
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
 
-          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowAlias: asString(json['windowId'] ?? json['windowAlias'] ?? json['window_alias']).trim(),
 
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
@@ -395,7 +395,7 @@ class AutomationStep {
           type: type,
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
 
-          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowAlias: asString(json['windowId'] ?? json['windowAlias'] ?? json['window_alias']).trim(),
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           waitTimeoutMs: asInt(json['timeout'] ?? json['waitTimeoutMs'], 5000, min: 100, max: 30000),
         );
@@ -417,7 +417,7 @@ class AutomationStep {
               : <String, dynamic>{},
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
 
-          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowAlias: asString(json['windowId'] ?? json['windowAlias'] ?? json['window_alias']).trim(),
 
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           waitTimeoutMs: asInt(json['timeout'] ?? json['waitTimeoutMs'], 5000, min: 100, max: 30000),
