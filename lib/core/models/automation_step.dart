@@ -158,7 +158,6 @@ class AutomationStep {
           if (delayMs > 0) 'delay': delayMs,
           if (repeat > 1) 'repeat': repeat,
           if (targetWindow.isNotEmpty) 'window': targetWindow,
-          if (windowAlias.isNotEmpty) 'windowAlias': windowAlias,
           if (windowMatch != 'title') 'windowMatch': windowMatch,
         },
         if (type == StepType.key) ...{
@@ -203,6 +202,8 @@ class AutomationStep {
           if (waitTimeoutMs != 5000) 'timeout': waitTimeoutMs,
           if (delayMs > 0) 'delay': delayMs,
         },
+        if (windowAlias.isNotEmpty) 'windowAlias': windowAlias,
+        if (windowMatch != 'title') 'windowMatch': windowMatch,
         if (windowChanged) 'windowChanged': true,
         if (previousWindow?.trim().isNotEmpty == true) 'previousWindow': previousWindow?.trim(),
       }..removeWhere((key, value) => value == null);
@@ -282,6 +283,8 @@ class AutomationStep {
         modifiers: _asStringList(event['modifiers'] ?? event['modifierKeys']),
         delayMs: delayMs,
         targetWindow: recordedWindow,
+        windowAlias: asString(event['windowAlias'] ?? event['window_alias']),
+        windowMatch: asString(event['windowMatch'] ?? event['window_match'], 'title'),
         windowChanged: windowChanged,
         previousWindow: previousWindow.isEmpty ? null : previousWindow,
       );
