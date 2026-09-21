@@ -2426,12 +2426,14 @@ Get-Process | Where-Object {
         _openWindows.isEmpty ? 'حدّث قائمة النوافذ أولاً' : 'اختر النافذة التي ستنفذ الخطوة',
         overflow: TextOverflow.ellipsis,
       ),
-      items: availableWindows.map((window) {
-        final title = (window['title'] ?? '').trim();
-        final processName = (window['process'] ?? '').trim();
-        final itemValue = matchMode == 'process' ? processName : title;
-        if (itemValue.isEmpty) return null;
-        return DropdownMenuItem<String>(
+      items: () {
+        final seen = <String>{};
+        return availableWindows.map((window) {
+          final title = (window['title'] ?? '').trim();
+          final processName = (window['process'] ?? '').trim();
+          final itemValue = matchMode == 'process' ? processName : title;
+          if (itemValue.isEmpty || !seen.add(itemValue.toLowerCase())) return null;
+          return DropdownMenuItem<String>(
           value: itemValue,
           child: Text(
             matchMode == 'process'
@@ -2439,8 +2441,9 @@ Get-Process | Where-Object {
                 : title + (processName.isNotEmpty ? ' [' + processName + ']' : ''),
             overflow: TextOverflow.ellipsis,
           ),
-        );
-      }).whereType<DropdownMenuItem<String>>().toList(),
+          );
+        }).whereType<DropdownMenuItem<String>>().toList();
+      }(),
       onChanged: _openWindows.isEmpty ? null : onChanged,
         ),
         const SizedBox(height: 8),
