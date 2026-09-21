@@ -2,6 +2,9 @@
 
 #include <psapi.h>
 
+#include <cstdint>
+#include <cstdlib>
+
 #include <string>
 #include <algorithm>
 #include <utility>
@@ -332,6 +335,19 @@ bool ActivateWindowByTitle(const std::string& target_title) {
 bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback_title) {
   const std::string key = LowerAscii(alias);
   if (key.empty()) return false;
+
+  // A numeric windowId is the native HWND exposed by getOpenWindows. It is
+  // the primary runtime identity and does not depend on a browser title.
+  char* end = nullptr;
+  const unsigned long long raw_hwnd = std::strtoull(key.c_str(), &end, 10);
+  if (end != key.c_str() && end != nullptr && *end == '\\0' && raw_hwnd != 0) {
+    const HWND hwnd = reinterpret_cast<HWND>(static_cast<uintptr_t>(raw_hwnd));
+    if (IsUsableApplicationWindow(hwnd) && SetForegroundReliable(hwnd)) {
+      g_last_observed_window = hwnd;
+      g_window_affinity["alias:" + key] = hwnd;
+      return true;
+    }
+  }
 
   const auto affinity = g_window_affinity.find("alias:" + key);
   if (affinity != g_window_affinity.end()) {
