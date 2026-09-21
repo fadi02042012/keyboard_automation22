@@ -29,6 +29,8 @@ class AutomationStep {
     this.counterValue = 0,
     this.incrementAmount = 1,
     this.targetWindow = '',
+    this.windowAlias = '',
+    this.windowMatch = 'title',
     this.windowChanged = false,
     this.previousWindow,
     this.waitTimeoutMs = 5000,
@@ -53,6 +55,11 @@ class AutomationStep {
   int counterValue;
   int incrementAmount;
   String targetWindow;
+  /// Logical window identity. Unlike the visible title, this remains stable
+  /// while a browser changes its page/tab title.
+  String windowAlias;
+  /// `title` keeps legacy behavior; `alias` resolves by runtime HWND affinity.
+  String windowMatch;
   bool windowChanged;
   String? previousWindow;
   int waitTimeoutMs;
@@ -82,6 +89,8 @@ class AutomationStep {
       counterValue: counterValue,
       incrementAmount: incrementAmount,
       targetWindow: targetWindow,
+      windowAlias: windowAlias,
+      windowMatch: windowMatch,
       windowChanged: windowChanged,
       previousWindow: previousWindow,
       waitTimeoutMs: waitTimeoutMs,
@@ -149,6 +158,8 @@ class AutomationStep {
           if (delayMs > 0) 'delay': delayMs,
           if (repeat > 1) 'repeat': repeat,
           if (targetWindow.isNotEmpty) 'window': targetWindow,
+          if (windowAlias.isNotEmpty) 'windowAlias': windowAlias,
+          if (windowMatch != 'title') 'windowMatch': windowMatch,
         },
         if (type == StepType.key) ...{
           'key': key,
@@ -255,6 +266,8 @@ class AutomationStep {
           text: producedText,
           delayMs: delayMs,
           targetWindow: recordedWindow,
+          windowAlias: asString(event['windowAlias'] ?? event['window_alias']),
+          windowMatch: asString(event['windowMatch'] ?? event['window_match'], 'title'),
           windowChanged: windowChanged,
           previousWindow: previousWindow.isEmpty ? null : previousWindow,
         );
@@ -312,6 +325,8 @@ class AutomationStep {
           repeat: asInt(json['repeat'], 1, min: 1, max: 100000),
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
           previousWindow: previousWindow.isEmpty ? null : previousWindow,
         );
@@ -367,6 +382,8 @@ class AutomationStep {
           id: id,
           type: type,
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           waitTimeoutMs: asInt(json['timeout'] ?? json['waitTimeoutMs'], 5000, min: 100, max: 30000),
         );
       case StepType.loop:
