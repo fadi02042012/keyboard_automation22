@@ -35,7 +35,7 @@ void main() {
         operation: () async {
           attempts++;
           running = false;
-          throw StateError('cancel');
+          return;
         },
       );
 
