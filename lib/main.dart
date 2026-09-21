@@ -956,7 +956,7 @@ Get-Process | Where-Object {
     }
   }
 
-  Future<bool> _waitForWindow(String windowTitle, {int timeoutMs = 5000}) async {
+  Future<bool> _waitForWindow(String windowTitle, {String windowAlias = '', int timeoutMs = 5000}) async {
     final safeTimeout = timeoutMs.clamp(100, 30000).toInt();
     final endTime = DateTime.now().add(Duration(milliseconds: safeTimeout));
     final minimumAttempts = (safeTimeout / 250).ceil();
