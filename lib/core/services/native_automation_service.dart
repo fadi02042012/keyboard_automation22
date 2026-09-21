@@ -101,9 +101,12 @@ class NativeAutomationService {
 
   Future<void> waitForUiElement({
     required String windowTitle,
+    String windowAlias = '',
     required Map<String, dynamic> arguments,
     int timeoutMs = 5000,
   }) async {
+    // windowAlias is the logical identity; native activation is handled by
+    // the caller before UI Automation inspection.
     final deadline = DateTime.now().add(
       Duration(milliseconds: timeoutMs.clamp(100, 30000).toInt()),
     );
