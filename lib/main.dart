@@ -2144,6 +2144,7 @@ Get-Process | Where-Object {
     String selectedWindow = existing?.targetWindow ?? _selectedWindowForDropdown ?? '';
     final existingCommand = existing?.command.trim() ?? '';
     String command = existingCommand.isNotEmpty ? existingCommand : 'invoke';
+    String windowMatch = existing?.windowMatch ?? 'title';
     final nameController = TextEditingController(text: existing?.commandArguments['name']?.toString() ?? '');
     final idController = TextEditingController(text: existing?.commandArguments['automationId']?.toString() ?? '');
     final classController = TextEditingController(text: existing?.commandArguments['className']?.toString() ?? '');
@@ -2477,6 +2478,7 @@ Get-Process | Where-Object {
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
+    String windowMatch = existing?.windowMatch ?? 'title';
 
     String previewText = textController.text;
 
@@ -3044,6 +3046,7 @@ Get-Process | Where-Object {
         existing.delayMs = delay;
         existing.targetWindow = targetWindow;
         existing.windowAlias = windowAlias;
+        existing.windowMatch = windowMatch;
       } else {
         _steps.add(AutomationStep(
           id: _newId(),
@@ -3054,6 +3057,7 @@ Get-Process | Where-Object {
           delayMs: delay,
           targetWindow: targetWindow,
           windowAlias: windowAlias,
+          windowMatch: windowMatch,
         ));
       }
     });
@@ -3071,6 +3075,7 @@ Get-Process | Where-Object {
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
+    String windowMatch = existing?.windowMatch ?? 'title';
     final focusNode = FocusNode();
 
     Future<void> fetchCurrentCoordinates() async {
