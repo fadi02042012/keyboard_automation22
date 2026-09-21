@@ -344,7 +344,7 @@ class AutomationStep {
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
 
-          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowAlias: asString(json['windowId'] ?? json['windowAlias'] ?? json['window_alias']).trim(),
 
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
