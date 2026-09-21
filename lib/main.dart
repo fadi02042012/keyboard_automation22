@@ -2286,6 +2286,7 @@ Get-Process | Where-Object {
     valueController.dispose();
     delayController.dispose();
     timeoutController.dispose();
+    windowAliasController.dispose();
     if (saved == true && mounted) setState(() {});
   }
 
