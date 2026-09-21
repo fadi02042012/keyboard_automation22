@@ -4028,6 +4028,116 @@ Get-Process | Where-Object {
     intervalController.dispose();
   }
 
+  Future<Map<String, String>?> _collectScenarioVariables() async {
+    final variables = <String>{};
+    final pattern = RegExp(r'\\{\\{\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\}\\}');
+    void scan(Object? value) {
+      if (value is String) {
+        for (final match in pattern.allMatches(value)) {
+          variables.add(match.group(1)!);
+        }
+      } else if (value is Map) {
+        for (final value in value.values) {
+          scan(value);
+        }
+      } else if (value is Iterable) {
+        for (final item in value) {
+          scan(item);
+        }
+      }
+    }
+    for (final step in _steps) {
+      scan(step.text);
+      scan(step.command);
+      scan(step.commandArguments);
+    }
+    if (variables.isEmpty || !mounted) return <String, String>{};
+
+    final controllers = <String, TextEditingController>{
+      for (final name in variables) name: TextEditingController(),
+    };
+    try {
+      final result = await showDialog<Map<String, String>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('بيانات السيناريو'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('أدخل القيم المطلوبة قبل بدء التشغيل:'),
+                ),
+                const SizedBox(height: 12),
+                for (final name in variables)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: TextField(
+                      controller: controllers[name],
+                      autofocus: name == variables.first,
+                      textDirection: TextDirection.rtl,
+                      decoration: InputDecoration(
+                        labelText: name,
+                        hintText: 'مثال: اليمن',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop({
+                  for (final entry in controllers.entries)
+                    entry.key: entry.value.text,
+                });
+              },
+              child: const Text('تشغيل'),
+            ),
+          ],
+        ),
+      );
+      return result;
+    } finally {
+      for (final controller in controllers.values) {
+        controller.dispose();
+      }
+    }
+  }
+
+  String _resolveScenarioText(String value, Map<String, String> variables) {
+    return value.replaceAllMapped(
+      RegExp(r'\\{\\{\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\}\\}'),
+      (match) => variables[match.group(1)] ?? match.group(0)!,
+    );
+  }
+
+  Map<String, dynamic> _resolveScenarioArguments(
+    Map<String, dynamic> arguments,
+    Map<String, String> variables,
+  ) {
+    dynamic resolve(dynamic value) {
+      if (value is String) return _resolveScenarioText(value, variables);
+      if (value is Map) {
+        return <String, dynamic>{
+          for (final entry in value.entries)
+            entry.key.toString(): resolve(entry.value),
+        };
+      }
+      if (value is Iterable) return value.map(resolve).toList();
+      return value;
+    }
+    return Map<String, dynamic>.from(resolve(arguments) as Map);
+  }
+
   // ==================== دالة التشغيل الرئيسية ====================
   Future<void> _runAutomation() async {
     if (_steps.isEmpty || _running) {
@@ -4042,6 +4152,9 @@ Get-Process | Where-Object {
       }
       return;
     }
+
+    final variables = await _collectScenarioVariables();
+    if (variables == null) return;
 
     final fallbackTargetWindow = _selectedWindowForDropdown?.trim();
     final needsFallbackWindow = _steps.any((step) {
@@ -4118,7 +4231,12 @@ Get-Process | Where-Object {
 
           for (int i in stepsToRepeat) {
             if (!_running) break;
-            final step = _steps[i];
+            final originalStep = _steps[i];
+            final variablesForStep = variables;
+            final step = originalStep.copy();
+            step.text = _resolveScenarioText(step.text, variablesForStep);
+            step.command = _resolveScenarioText(step.command, variablesForStep);
+            step.commandArguments = _resolveScenarioArguments(step.commandArguments, variablesForStep);
             if (step.type == StepType.loop) continue;
 
             setState(() {
