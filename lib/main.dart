@@ -2121,6 +2121,7 @@ Get-Process | Where-Object {
   void _addSemanticCommand() => _showSemanticCommandDialog();
 
   Future<void> _showSemanticCommandDialog({AutomationStep? existing, int? index}) async {
+    final windowAliasController = TextEditingController(text: existing?.windowAlias ?? '');
     String selectedWindow = existing?.targetWindow ?? _selectedWindowForDropdown ?? '';
     final existingCommand = existing?.command.trim() ?? '';
     String command = existingCommand.isNotEmpty ? existingCommand : 'invoke';
@@ -2255,6 +2256,7 @@ Get-Process | Where-Object {
                   id: existing?.id ?? _newId(),
                   type: StepType.semanticCommand,
                   targetWindow: selectedWindow.trim(),
+                  windowAlias: windowAliasController.text.trim(),
                   command: command,
                   commandArguments: args,
                   delayMs: max(0, int.tryParse(delayController.text) ?? 200),
@@ -2429,6 +2431,7 @@ Get-Process | Where-Object {
     final textController = TextEditingController(text: existing?.text ?? '');
     final repeatController = TextEditingController(text: '${existing?.repeat ?? 1}');
     final delayController = TextEditingController(text: '${existing?.delayMs ?? 0}');
+    final windowAliasController = TextEditingController(text: existing?.windowAlias ?? '');
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
@@ -2483,6 +2486,7 @@ Get-Process | Where-Object {
                   textController.dispose();
                   repeatController.dispose();
                   delayController.dispose();
+                  windowAliasController.dispose();
                 }
               },
               child: AlertDialog(
@@ -2785,6 +2789,7 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
+                        'windowAlias': windowAliasController.text.trim(),
                       });
                     },
                     icon: const Icon(Icons.save),
@@ -2809,6 +2814,7 @@ Get-Process | Where-Object {
     final repeat = result['repeat'] as int;
     final delay = result['delay'] as int;
     final targetWindow = result['targetWindow'] as String? ?? '';
+    final windowAlias = result['windowAlias'] as String? ?? '';
 
     _captureEditorChange();
     setState(() {
@@ -2817,6 +2823,7 @@ Get-Process | Where-Object {
         existing.repeat = repeat;
         existing.delayMs = delay;
         existing.targetWindow = targetWindow;
+        existing.windowAlias = windowAlias;
       } else {
         _steps.add(AutomationStep(
           id: _newId(),
@@ -2825,6 +2832,7 @@ Get-Process | Where-Object {
           repeat: repeat,
           delayMs: delay,
           targetWindow: targetWindow,
+          windowAlias: windowAlias,
         ));
       }
     });
@@ -2843,6 +2851,7 @@ Get-Process | Where-Object {
     if (!modifiers.contains(selectedModifier)) selectedModifier = 'NONE';
     final repeatController = TextEditingController(text: '${existing?.repeat ?? 1}');
     final delayController = TextEditingController(text: '${existing?.delayMs ?? 0}');
+    final windowAliasController = TextEditingController(text: existing?.windowAlias ?? '');
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
@@ -2859,6 +2868,7 @@ Get-Process | Where-Object {
                 if (didPop) {
                   repeatController.dispose();
                   delayController.dispose();
+                  windowAliasController.dispose();
                 }
               },
               child: AlertDialog(
@@ -2943,6 +2953,7 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
+                        'windowAlias': windowAliasController.text.trim(),
                       });
                     },
                     child: const Text('حفظ'),
@@ -2966,6 +2977,7 @@ Get-Process | Where-Object {
     final repeat = result['repeat'] as int;
     final delay = result['delay'] as int;
     final targetWindow = result['targetWindow'] as String? ?? '';
+    final windowAlias = result['windowAlias'] as String? ?? '';
 
     _captureEditorChange();
     setState(() {
@@ -2975,6 +2987,7 @@ Get-Process | Where-Object {
         existing.repeat = repeat;
         existing.delayMs = delay;
         existing.targetWindow = targetWindow;
+        existing.windowAlias = windowAlias;
       } else {
         _steps.add(AutomationStep(
           id: _newId(),
@@ -2984,6 +2997,7 @@ Get-Process | Where-Object {
           repeat: repeat,
           delayMs: delay,
           targetWindow: targetWindow,
+          windowAlias: windowAlias,
         ));
       }
     });
@@ -2997,6 +3011,7 @@ Get-Process | Where-Object {
     bool doubleClick = existing?.doubleClick ?? false;
     final repeatController = TextEditingController(text: '${existing?.repeat ?? 1}');
     final delayController = TextEditingController(text: '${existing?.delayMs ?? 0}');
+    final windowAliasController = TextEditingController(text: existing?.windowAlias ?? '');
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
@@ -3037,6 +3052,7 @@ Get-Process | Where-Object {
                   yController.dispose();
                   repeatController.dispose();
                   delayController.dispose();
+                  windowAliasController.dispose();
                   focusNode.dispose();
                 }
               },
@@ -3177,6 +3193,7 @@ Get-Process | Where-Object {
                           'repeat': repeat < 1 ? 1 : repeat,
                           'delay': delay < 0 ? 0 : delay,
                           'targetWindow': selectedWindow,
+                          'windowAlias': windowAliasController.text.trim(),
                         });
                       },
                       child: const Text('حفظ'),
@@ -3203,6 +3220,7 @@ Get-Process | Where-Object {
     final repeat = result['repeat'] as int;
     final delay = result['delay'] as int;
     final targetWindow = result['targetWindow'] as String? ?? '';
+    final windowAlias = result['windowAlias'] as String? ?? '';
 
     _captureEditorChange();
     setState(() {
@@ -3214,6 +3232,7 @@ Get-Process | Where-Object {
         existing.repeat = repeat;
         existing.delayMs = delay;
         existing.targetWindow = targetWindow;
+        existing.windowAlias = windowAlias;
       } else {
         _steps.add(AutomationStep(
           id: _newId(),
@@ -3225,6 +3244,7 @@ Get-Process | Where-Object {
           repeat: repeat,
           delayMs: delay,
           targetWindow: targetWindow,
+          windowAlias: windowAlias,
         ));
       }
     });
