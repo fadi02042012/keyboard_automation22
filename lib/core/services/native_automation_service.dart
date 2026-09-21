@@ -77,6 +77,7 @@ class NativeAutomationService {
 
   Future<void> executeSemanticCommand({
     required String windowTitle,
+    String windowAlias = '',
     required String command,
     required Map<String, dynamic> arguments,
     int waitTimeoutMs = 5000,
@@ -84,6 +85,7 @@ class NativeAutomationService {
     if (command == 'wait_for_element') {
       await waitForUiElement(
         windowTitle: windowTitle,
+        windowAlias: windowAlias,
         arguments: arguments,
         timeoutMs: waitTimeoutMs,
       );
@@ -91,6 +93,7 @@ class NativeAutomationService {
     }
     await invokeAutomation<void>('ui_execute_command', {
       'windowTitle': windowTitle,
+      if (windowAlias.trim().isNotEmpty) 'windowAlias': windowAlias.trim(),
       'command': command,
       ...arguments,
     });
