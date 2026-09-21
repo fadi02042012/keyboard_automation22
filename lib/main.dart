@@ -2979,7 +2979,10 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
-                        'windowAlias': windowAliasController.text.trim(),
+                        'windowAlias': _windowIdForSelection(
+                          selectedWindow,
+                          windowAliasController.text,
+                        ),
                       });
                     },
                     child: const Text('حفظ'),
