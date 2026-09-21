@@ -1015,14 +1015,7 @@ Get-Process | Where-Object {
   ) {
     final alias = explicitAlias.trim();
     if (alias.isNotEmpty) return alias;
-    if (matchMode == 'process') {
-      final window = _openWindows.cast<Map<String, String>?>().firstWhere(
-        (item) => item?['title'] == selectedWindow,
-        orElse: () => null,
-      );
-      final process = window?['process']?.trim() ?? '';
-      if (process.isNotEmpty) return process;
-    }
+    if (matchMode == 'process') return selectedWindow;
     return _windowIdForTitle(selectedWindow);
   }
 
@@ -2414,9 +2407,15 @@ Get-Process | Where-Object {
     ValueChanged<String?>? onMatchChanged,
   }) {
     final availableWindows = _uniqueOpenWindows();
-    final availableTitles = availableWindows.map((window) => window['title']!).toList();
-    final value = availableTitles.contains(selectedWindow) ? selectedWindow : null;
     final matchMode = initialMatch == 'process' ? 'process' : 'title';
+    final availableValues = availableWindows
+        .map((window) => matchMode == 'process'
+            ? (window['process'] ?? '').trim()
+            : (window['title'] ?? '').trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList();
+    final value = availableValues.contains(selectedWindow) ? selectedWindow : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2434,16 +2433,20 @@ Get-Process | Where-Object {
         overflow: TextOverflow.ellipsis,
       ),
       items: availableWindows.map((window) {
-        final title = window['title'] ?? '';
-        final process = window['process'] ?? '';
+        final title = (window['title'] ?? '').trim();
+        final processName = (window['process'] ?? '').trim();
+        final itemValue = matchMode == 'process' ? processName : title;
+        if (itemValue.isEmpty) return null;
         return DropdownMenuItem<String>(
-          value: title,
+          value: itemValue,
           child: Text(
-            '$title${process.isNotEmpty ? ' [$process]' : ''}',
+            matchMode == 'process'
+                ? processName
+                : title + (processName.isNotEmpty ? ' [' + processName + ']' : ''),
             overflow: TextOverflow.ellipsis,
           ),
         );
-      }).toList(),
+      }).whereType<DropdownMenuItem<String>>().toList(),
       onChanged: _openWindows.isEmpty ? null : onChanged,
         ),
         const SizedBox(height: 8),
@@ -2876,7 +2879,6 @@ Get-Process | Where-Object {
                           windowMatch,
                           windowAliasController.text,
                         ),
-                        'windowMatch': windowMatch,
                         'windowMatch': windowMatch,
                       });
                     },
@@ -5163,7 +5165,7 @@ Get-Process | Where-Object {
                             );
             }
 
-            final content = Column(
+            final topControls = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
             Wrap(
@@ -5379,20 +5381,27 @@ Get-Process | Where-Object {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            if (compactLayout)
-              SizedBox(
-                height: 320,
-                child: buildStepList(),
-              )
-            else
-              Expanded(child: buildStepList()),
+            const SizedBox(height: 12),
           ],
         );
 
-            return compactLayout
-                ? SingleChildScrollView(child: content)
-                : content;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (compactLayout)
+                  SizedBox(
+                    height: 250,
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: topControls,
+                    ),
+                  )
+                else
+                  topControls,
+                const SizedBox(height: 8),
+                Expanded(child: buildStepList()),
+              ],
+            );
           },
         ),
       ),
