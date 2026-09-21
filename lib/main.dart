@@ -856,15 +856,6 @@ Get-Process | Where-Object {
         requestedTitle.contains(actualTitle);
   }
 
-  String _expectedProcessForWindowTitle(String title) {
-    final value = title.toLowerCase();
-    if (value.contains('google chrome') || value.contains('chrome')) return 'chrome.exe';
-    if (value.contains('microsoft edge') || value.contains('edge')) return 'msedge.exe';
-    if (value.contains('firefox')) return 'firefox.exe';
-    if (value.contains('brave')) return 'brave.exe';
-    return '';
-  }
-
   bool _activeWindowMatches(String requestedTitle, String activeTitle, String activeProcess) {
     // Process name is not a unique window identity (Chrome/Edge may have
     // several windows in the same process). Verification must therefore use
