@@ -5165,11 +5165,10 @@ Get-Process | Where-Object {
               children: [
             SizedBox(
               height: 42,
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                children: [
                 _addButton(icon: Icons.keyboard_alt_outlined, label: 'نص', onPressed: _running ? null : _addText, color: Colors.blue),
                 _addButton(icon: Icons.key, label: 'مفتاح', onPressed: _running ? null : _addKey, color: Colors.deepPurple),
                 _addButton(icon: Icons.mouse, label: 'ماوس', onPressed: _running ? null : _addMouse, color: Colors.red),
@@ -5205,8 +5204,7 @@ Get-Process | Where-Object {
                     onPressed: _macroBusy ? null : _cancelMacroRecording,
                     color: Colors.grey.shade700,
                   ),
-                  ],
-                ),
+                ],
               ),
             ),
             if (_macroRecording || _macroEventCount > 0) ...[
