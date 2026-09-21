@@ -900,7 +900,7 @@ Get-Process | Where-Object {
     return false;
   }
 
-  Future<bool> _activateAndVerifyWindow(String windowTitle, {String windowAlias = ''}) async {
+  Future<bool> _activateAndVerifyWindow(String windowTitle, {String windowAlias = '', String windowMatch = 'title'}) async {
     final title = windowTitle.trim();
     final alias = windowAlias.trim();
     if (title.isEmpty && alias.isEmpty) return false;
@@ -949,14 +949,14 @@ Get-Process | Where-Object {
     }
   }
 
-  Future<bool> _waitForWindow(String windowTitle, {String windowAlias = '', int timeoutMs = 5000}) async {
+  Future<bool> _waitForWindow(String windowTitle, {String windowAlias = '', String windowMatch = 'title', int timeoutMs = 5000}) async {
     final safeTimeout = timeoutMs.clamp(100, 30000).toInt();
     final endTime = DateTime.now().add(Duration(milliseconds: safeTimeout));
     final minimumAttempts = (safeTimeout / 250).ceil();
     final maxAttempts = max(1, max(_maxRetries, minimumAttempts));
     var attempts = 0;
     while (_running && DateTime.now().isBefore(endTime) && attempts < maxAttempts) {
-      if (await _activateAndVerifyWindow(windowTitle, windowAlias: windowAlias)) return true;
+      if (await _activateAndVerifyWindow(windowTitle, windowAlias: windowAlias, windowMatch: windowMatch)) return true;
       attempts++;
       final remaining = endTime.difference(DateTime.now()).inMilliseconds;
       if (remaining > 0) {
@@ -4066,7 +4066,7 @@ Get-Process | Where-Object {
 
   Future<Map<String, String>?> _collectScenarioVariables() async {
     final variables = <String>{};
-    final pattern = RegExp(r'\\{\\{\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\}\\}');
+    final pattern = RegExp(r'\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}');
     void scan(Object? value) {
       if (value is String) {
         for (final match in pattern.allMatches(value)) {
