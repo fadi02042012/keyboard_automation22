@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keyboard_automation/core/services/automation_executor.dart';
 
@@ -52,8 +50,8 @@ void main() {
         fastMode: () => true,
       );
 
-      expect(
-        () => executor.invokeWithRetry(
+      await expectLater(
+        executor.invokeWithRetry(
           action: 'failing operation',
           operation: () async {
             attempts++;
@@ -63,7 +61,6 @@ void main() {
         throwsA(isA<StateError>()),
       );
 
-      await Future<void>.delayed(Duration.zero);
       expect(attempts, 2);
     });
 
