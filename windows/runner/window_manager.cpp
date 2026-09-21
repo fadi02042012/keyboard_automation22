@@ -375,7 +375,7 @@ bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback
   // the primary runtime identity and does not depend on a browser title.
   char* end = nullptr;
   const unsigned long long raw_hwnd = std::strtoull(key.c_str(), &end, 10);
-  if (end != key.c_str() && end != nullptr && *end == '\\0' && raw_hwnd != 0) {
+  if (end != key.c_str() && end != nullptr && *end == '\0' && raw_hwnd != 0) {
     const HWND hwnd = reinterpret_cast<HWND>(static_cast<uintptr_t>(raw_hwnd));
     if (IsUsableApplicationWindow(hwnd) && SetForegroundReliable(hwnd)) {
       g_last_observed_window = hwnd;
