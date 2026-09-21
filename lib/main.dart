@@ -5120,8 +5120,6 @@ Get-Process | Where-Object {
         padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final compactLayout = constraints.hasBoundedHeight && constraints.maxHeight < 420;
-
             Widget buildStepList() {
               return _steps.isEmpty
                   ? _emptyState()
@@ -5207,7 +5205,8 @@ Get-Process | Where-Object {
                     onPressed: _macroBusy ? null : _cancelMacroRecording,
                     color: Colors.grey.shade700,
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
             if (_macroRecording || _macroEventCount > 0) ...[
