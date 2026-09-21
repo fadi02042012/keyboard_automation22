@@ -98,6 +98,7 @@ void FlutterWindow::OnMethodCall(
             windowMap[flutter::EncodableValue("title")] = flutter::EncodableValue(win.title);
             windowMap[flutter::EncodableValue("process")] = flutter::EncodableValue(win.processName);
             windowMap[flutter::EncodableValue("isActive")] = flutter::EncodableValue(win.isActive);
+            windowMap[flutter::EncodableValue("hwnd")] = flutter::EncodableValue(static_cast<int64_t>(reinterpret_cast<intptr_t>(win.hwnd)));
             windowList.push_back(flutter::EncodableValue(windowMap));
         }
         
@@ -111,6 +112,7 @@ void FlutterWindow::OnMethodCall(
         windowMap[flutter::EncodableValue("title")] = flutter::EncodableValue(win.title);
         windowMap[flutter::EncodableValue("process")] = flutter::EncodableValue(win.processName);
         windowMap[flutter::EncodableValue("isActive")] = flutter::EncodableValue(win.isActive);
+        windowMap[flutter::EncodableValue("hwnd")] = flutter::EncodableValue(static_cast<int64_t>(reinterpret_cast<intptr_t>(win.hwnd)));
         result->Success(flutter::EncodableValue(windowMap));
         return;
     }
@@ -118,18 +120,31 @@ void FlutterWindow::OnMethodCall(
     if (method_call.method_name() == "activateWindow") {
         auto args = std::get_if<flutter::EncodableMap>(method_call.arguments());
         if (args) {
-            auto it = args->find(flutter::EncodableValue("windowTitle"));
-            if (it != args->end()) {
-                const auto* targetTitle = std::get_if<std::string>(&it->second);
-                if (targetTitle == nullptr || targetTitle->empty()) {
-                    result->Error("INVALID_ARGUMENTS", "windowTitle must be a non-empty string");
-                    return;
+            std::string windowAlias;
+            std::string windowTitle;
+            auto aliasIt = args->find(flutter::EncodableValue("windowAlias"));
+            if (aliasIt != args->end()) {
+                if (const auto* value = std::get_if<std::string>(&aliasIt->second)) {
+                    windowAlias = *value;
                 }
-                result->Success(flutter::EncodableValue(ActivateWindowByTitle(*targetTitle)));
+            }
+            auto titleIt = args->find(flutter::EncodableValue("windowTitle"));
+            if (titleIt != args->end()) {
+                if (const auto* value = std::get_if<std::string>(&titleIt->second)) {
+                    windowTitle = *value;
+                }
+            }
+            if (windowAlias.empty() && windowTitle.empty()) {
+                result->Error("INVALID_ARGUMENTS", "windowAlias or windowTitle is required");
                 return;
             }
+            const bool activated = !windowAlias.empty()
+                ? ActivateWindowByAlias(windowAlias, windowTitle)
+                : ActivateWindowByTitle(windowTitle);
+            result->Success(flutter::EncodableValue(activated));
+            return;
         }
-        result->Error("INVALID_ARGUMENTS", "Missing windowTitle parameter");
+        result->Error("INVALID_ARGUMENTS", "Missing window arguments");
         return;
     }
 
