@@ -5167,9 +5167,11 @@ Get-Process | Where-Object {
               children: [
             SizedBox(
               height: 42,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
                 _addButton(icon: Icons.keyboard_alt_outlined, label: 'نص', onPressed: _running ? null : _addText, color: Colors.blue),
                 _addButton(icon: Icons.key, label: 'مفتاح', onPressed: _running ? null : _addKey, color: Colors.deepPurple),
                 _addButton(icon: Icons.mouse, label: 'ماوس', onPressed: _running ? null : _addMouse, color: Colors.red),
