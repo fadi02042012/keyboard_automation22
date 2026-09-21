@@ -328,6 +328,10 @@ class AutomationStep {
           repeat: asInt(json['repeat'], 1, min: 1, max: 100000),
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
@@ -342,6 +346,10 @@ class AutomationStep {
           repeat: asInt(json['repeat'], 1, min: 1, max: 100000),
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
           previousWindow: previousWindow.isEmpty ? null : previousWindow,
         );
@@ -363,6 +371,10 @@ class AutomationStep {
           repeat: asInt(json['repeat'], 1, min: 1, max: 100000),
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowChanged: windowChanged,
           previousWindow: previousWindow.isEmpty ? null : previousWindow,
         );
@@ -385,6 +397,10 @@ class AutomationStep {
           id: id,
           type: type,
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           waitTimeoutMs: asInt(json['timeout'] ?? json['waitTimeoutMs'], 5000, min: 100, max: 30000),
@@ -406,6 +422,10 @@ class AutomationStep {
               ? Map<String, dynamic>.from(rawArguments)
               : <String, dynamic>{},
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
+
+          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+
+          windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           waitTimeoutMs: asInt(json['timeout'] ?? json['waitTimeoutMs'], 5000, min: 100, max: 30000),
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
         );
