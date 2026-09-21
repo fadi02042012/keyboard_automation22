@@ -246,6 +246,38 @@ bool WindowTitlesMatch(const std::string& actual_title, const std::string& reque
   return TitleMatchScore(actual_title, requested_title) > 0;
 }
 
+bool ActivateWindowByProcess(const std::string& process_name) {
+  const std::string requested = LowerAscii(process_name);
+  if (requested.empty()) return false;
+
+  const auto windows = GetOpenWindows();
+  const WindowInfo* best_match = nullptr;
+  for (const auto& window : windows) {
+    const std::string process = LowerAscii(window.processName);
+    if (process == requested || process.find(requested) != std::string::npos) {
+      best_match = &window;
+      if (process == requested) break;
+    }
+  }
+
+  if (best_match == nullptr || best_match->hwnd == nullptr) return false;
+
+  const WindowInfo active = GetActiveWindowInfo();
+  if (active.hwnd != nullptr && LowerAscii(active.processName) == requested) {
+    best_match = nullptr;
+    for (const auto& window : windows) {
+      if (window.hwnd == active.hwnd) {
+        best_match = &window;
+        break;
+      }
+    }
+  }
+
+  if (best_match == nullptr || best_match->hwnd == nullptr) return false;
+  g_last_observed_window = best_match->hwnd;
+  return SetForegroundReliable(best_match->hwnd);
+}
+
 bool ActivateWindowByTitle(const std::string& target_title) {
   if (target_title.empty()) return false;
 
@@ -332,7 +364,10 @@ bool ActivateWindowByTitle(const std::string& target_title) {
   return SetForegroundReliable(hwnd);
 }
 
-bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback_title) {
+bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback_title, const std::string& match_mode) {
+  if (LowerAscii(match_mode) == "process" || LowerAscii(match_mode) == "program") {
+    return ActivateWindowByProcess(alias);
+  }
   const std::string key = LowerAscii(alias);
   if (key.empty()) return false;
 
