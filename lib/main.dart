@@ -1008,6 +1008,24 @@ Get-Process | Where-Object {
     return _windowIdForTitle(selectedWindow);
   }
 
+  String _windowIdentityForSelection(
+    String selectedWindow,
+    String matchMode,
+    String explicitAlias,
+  ) {
+    final alias = explicitAlias.trim();
+    if (alias.isNotEmpty) return alias;
+    if (matchMode == 'process') {
+      final window = _openWindows.cast<Map<String, String>?>().firstWhere(
+        (item) => item?['title'] == selectedWindow,
+        orElse: () => null,
+      );
+      final process = window?['process']?.trim() ?? '';
+      if (process.isNotEmpty) return process;
+    }
+    return _windowIdForTitle(selectedWindow);
+  }
+
   String _inheritedTargetWindowForNewStep() {
     for (final step in _steps.reversed) {
       final target = step.targetWindow.trim();
@@ -1174,11 +1192,12 @@ Get-Process | Where-Object {
   Future<void> _addWaitForWindow() async {
     if (!mounted) return;
 
-    final selectedWindow = await _showSelectWindowDialog();
+    String selectedWindow = await _showSelectWindowDialog() ?? '';
     if (!mounted) return;
+    if (selectedWindow.isEmpty) return;
 
-    if (selectedWindow == null || selectedWindow.isEmpty) return;
-
+    String windowMatch = 'title';
+    final windowAliasController = TextEditingController();
     final timeoutController = TextEditingController(text: '5000');
 
     final timeoutResult = await showDialog<int>(
@@ -1232,11 +1251,19 @@ Get-Process | Where-Object {
     if (!mounted) return;
     if (timeoutResult == null) return;
     _captureEditorChange();
+    final windowAlias = _windowIdentityForSelection(
+      selectedWindow,
+      windowMatch,
+      windowAliasController.text,
+    );
+    windowAliasController.dispose();
     setState(() {
       _steps.add(AutomationStep(
         id: _newId(),
         type: StepType.waitForWindow,
         targetWindow: selectedWindow,
+        windowAlias: windowAlias,
+        windowMatch: windowMatch,
         waitTimeoutMs: timeoutResult,
       ));
     });
@@ -2212,7 +2239,12 @@ Get-Process | Where-Object {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildStepWindowSelector(selectedWindow: selectedWindow, onChanged: (value) => setDialogState(() => selectedWindow = value ?? '')),
+                  _buildStepWindowSelector(
+                    selectedWindow: selectedWindow,
+                    initialMatch: windowMatch,
+                    onChanged: (value) => setDialogState(() => selectedWindow = value ?? ''),
+                    onMatchChanged: (value) => setDialogState(() => windowMatch = value ?? 'title'),
+                  ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: command,
@@ -2276,10 +2308,12 @@ Get-Process | Where-Object {
                   id: existing?.id ?? _newId(),
                   type: StepType.semanticCommand,
                   targetWindow: selectedWindow.trim(),
-                  windowAlias: _windowIdForSelection(
+                  windowAlias: _windowIdentityForSelection(
                     selectedWindow,
+                    windowMatch,
                     windowAliasController.text,
                   ),
+                  windowMatch: windowMatch,
                   command: command,
                   commandArguments: args,
                   delayMs: max(0, int.tryParse(delayController.text) ?? 200),
@@ -2837,10 +2871,12 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
-                        'windowAlias': _windowIdForSelection(
+                        'windowAlias': _windowIdentityForSelection(
                           selectedWindow,
+                          windowMatch,
                           windowAliasController.text,
                         ),
+                        'windowMatch': windowMatch,
                         'windowMatch': windowMatch,
                       });
                     },
@@ -2935,8 +2971,12 @@ Get-Process | Where-Object {
                     children: [
                       _buildStepWindowSelector(
                         selectedWindow: selectedWindow,
+                        initialMatch: windowMatch,
                         onChanged: (value) {
                           setDialogState(() => selectedWindow = value ?? '');
+                        },
+                        onMatchChanged: (value) {
+                          setDialogState(() => windowMatch = value ?? 'title');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -3008,10 +3048,12 @@ Get-Process | Where-Object {
                         'repeat': repeat < 1 ? 1 : repeat,
                         'delay': delay < 0 ? 0 : delay,
                         'targetWindow': selectedWindow,
-                        'windowAlias': _windowIdForSelection(
+                        'windowAlias': _windowIdentityForSelection(
                           selectedWindow,
+                          windowMatch,
                           windowAliasController.text,
                         ),
+                        'windowMatch': windowMatch,
                       });
                     },
                     child: const Text('حفظ'),
@@ -3258,7 +3300,12 @@ Get-Process | Where-Object {
                           'repeat': repeat < 1 ? 1 : repeat,
                           'delay': delay < 0 ? 0 : delay,
                           'targetWindow': selectedWindow,
-                          'windowAlias': windowAliasController.text.trim(),
+                          'windowAlias': _windowIdentityForSelection(
+                            selectedWindow,
+                            windowMatch,
+                            windowAliasController.text,
+                          ),
+                          'windowMatch': windowMatch,
                         });
                       },
                       child: const Text('حفظ'),
@@ -3310,6 +3357,7 @@ Get-Process | Where-Object {
           delayMs: delay,
           targetWindow: targetWindow,
           windowAlias: windowAlias,
+          windowMatch: windowMatch,
         ));
       }
     });
@@ -3647,15 +3695,18 @@ Get-Process | Where-Object {
                                           onTap: () {
                                             _captureEditorChange();
                                             setState(() {
-                                              _steps.add(AutomationStep(
-                                                id: _newId(),
-                                                type: StepType.key,
-                                                key: shortcut.key,
-                                                modifiers: shortcut.modifiers,
-                                                repeat: 1,
-                                                delayMs: 0,
-                                                targetWindow: _inheritedTargetWindowForNewStep(),
-                                              ));
+                                              final targetWindow = _inheritedTargetWindowForNewStep();
+                                            _steps.add(AutomationStep(
+                                              id: _newId(),
+                                              type: StepType.key,
+                                              key: shortcut.key,
+                                              modifiers: shortcut.modifiers,
+                                              repeat: 1,
+                                              delayMs: 0,
+                                              targetWindow: targetWindow,
+                                              windowAlias: _windowIdForTitle(targetWindow),
+                                              windowMatch: 'title',
+                                            ));
                                             });
                                             Navigator.pop(context);
                                           },
