@@ -907,13 +907,17 @@ Get-Process | Where-Object {
     return false;
   }
 
-  Future<bool> _activateAndVerifyWindow(String windowTitle) async {
+  Future<bool> _activateAndVerifyWindow(String windowTitle, {String windowAlias = ''}) async {
     final title = windowTitle.trim();
-    if (title.isEmpty) return false;
+    final alias = windowAlias.trim();
+    if (title.isEmpty && alias.isEmpty) return false;
 
     try {
       final activated = await _nativeAutomation
-          .invokeWindows<bool>('activateWindow', {'windowTitle': title})
+          .invokeWindows<bool>('activateWindow', {
+            if (title.isNotEmpty) 'windowTitle': title,
+            if (alias.isNotEmpty) 'windowAlias': alias,
+          })
           .timeout(
             const Duration(seconds: 2),
             onTimeout: () => false,
@@ -928,7 +932,7 @@ Get-Process | Where-Object {
           final activeTitle = active['title']?.toString().trim() ?? '';
           final activeProcess = active['process']?.toString().trim() ?? '';
           if (activeTitle.isNotEmpty || activeProcess.isNotEmpty) {
-            return _activeWindowMatches(title, activeTitle, activeProcess);
+            return alias.isNotEmpty ? true : _activeWindowMatches(title, activeTitle, activeProcess);
           }
           // A supported runner returned an empty active-window payload; do
           // not send input because the foreground target is unknown.
@@ -959,7 +963,7 @@ Get-Process | Where-Object {
     final maxAttempts = max(1, max(_maxRetries, minimumAttempts));
     var attempts = 0;
     while (_running && DateTime.now().isBefore(endTime) && attempts < maxAttempts) {
-      if (await _activateAndVerifyWindow(windowTitle)) return true;
+      if (await _activateAndVerifyWindow(windowTitle, windowAlias: windowAlias)) return true;
       attempts++;
       final remaining = endTime.difference(DateTime.now()).inMilliseconds;
       if (remaining > 0) {
