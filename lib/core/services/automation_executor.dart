@@ -67,7 +67,7 @@ class AutomationExecutor {
     }
 
     if (lastError != null) {
-      Error.throwWithStackTrace(lastError!, lastStackTrace ?? StackTrace.current);
+      Error.throwWithStackTrace(lastError, lastStackTrace ?? StackTrace.current);
     }
     throw StateError('$action failed');
   }
