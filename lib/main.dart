@@ -5165,10 +5165,12 @@ Get-Process | Where-Object {
             final topControls = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
+            SizedBox(
+              height: 42,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                children: [
                 _addButton(icon: Icons.keyboard_alt_outlined, label: 'نص', onPressed: _running ? null : _addText, color: Colors.blue),
                 _addButton(icon: Icons.key, label: 'مفتاح', onPressed: _running ? null : _addKey, color: Colors.deepPurple),
                 _addButton(icon: Icons.mouse, label: 'ماوس', onPressed: _running ? null : _addMouse, color: Colors.red),
@@ -5204,7 +5206,8 @@ Get-Process | Where-Object {
                     onPressed: _macroBusy ? null : _cancelMacroRecording,
                     color: Colors.grey.shade700,
                   ),
-              ],
+                ],
+              ),
             ),
             if (_macroRecording || _macroEventCount > 0) ...[
               const SizedBox(height: 10),
@@ -5406,8 +5409,10 @@ Get-Process | Where-Object {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        minimumSize: Size.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
         side: BorderSide(color: color),
         foregroundColor: color,
         textStyle: const TextStyle(fontSize: 12),
@@ -5415,9 +5420,9 @@ Get-Process | Where-Object {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 3),
+          Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 11)),
         ],
       ),
     );
