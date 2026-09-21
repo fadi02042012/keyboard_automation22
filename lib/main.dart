@@ -2554,8 +2554,12 @@ Get-Process | Where-Object {
                     children: [
                       _buildStepWindowSelector(
                         selectedWindow: selectedWindow,
+                        initialMatch: windowMatch,
                         onChanged: (value) {
                           setDialogState(() => selectedWindow = value ?? '');
+                        },
+                        onMatchChanged: (value) {
+                          setDialogState(() => windowMatch = value ?? 'title');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -2835,6 +2839,7 @@ Get-Process | Where-Object {
                           selectedWindow,
                           windowAliasController.text,
                         ),
+                        'windowMatch': windowMatch,
                       });
                     },
                     icon: const Icon(Icons.save),
@@ -2869,6 +2874,7 @@ Get-Process | Where-Object {
         existing.delayMs = delay;
         existing.targetWindow = targetWindow;
         existing.windowAlias = windowAlias;
+        existing.windowMatch = result['windowMatch'] as String? ?? 'title';
       } else {
         _steps.add(AutomationStep(
           id: _newId(),
@@ -2878,6 +2884,7 @@ Get-Process | Where-Object {
           delayMs: delay,
           targetWindow: targetWindow,
           windowAlias: windowAlias,
+          windowMatch: result['windowMatch'] as String? ?? 'title',
         ));
       }
     });
@@ -2900,6 +2907,7 @@ Get-Process | Where-Object {
     String selectedWindow = existing?.targetWindow.isNotEmpty == true
         ? existing!.targetWindow
         : _inheritedTargetWindowForNewStep();
+    String windowMatch = existing?.windowMatch ?? 'title';
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -3125,8 +3133,12 @@ Get-Process | Where-Object {
                           children: [
                         _buildStepWindowSelector(
                           selectedWindow: selectedWindow,
+                          initialMatch: windowMatch,
                           onChanged: (value) {
                             setDialogState(() => selectedWindow = value ?? '');
+                          },
+                          onMatchChanged: (value) {
+                            setDialogState(() => windowMatch = value ?? 'title');
                           },
                         ),
                         const SizedBox(height: 10),
