@@ -346,20 +346,22 @@ bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback
     }
   }
 
-  // First use the currently active application window. This is the natural
-  // anchor when a recording/playback starts on a browser whose title changes.
-  const WindowInfo active = GetActiveWindowInfo();
-  if (active.hwnd != nullptr && IsUsableApplicationWindow(active.hwnd)) {
-    g_window_affinity["alias:" + key] = active.hwnd;
-    if (SetForegroundReliable(active.hwnd)) return true;
-  }
-
+  // Resolve the alias by its recorded title on first use. This avoids
+  // accidentally binding to an unrelated active Chrome/Edge window.
   if (!fallback_title.empty() && ActivateWindowByTitle(fallback_title)) {
     const WindowInfo resolved = GetActiveWindowInfo();
     if (resolved.hwnd != nullptr) {
       g_window_affinity["alias:" + key] = resolved.hwnd;
       return true;
     }
+  }
+
+  // If no title was recorded, the current foreground application is the
+  // only available anchor.
+  const WindowInfo active = GetActiveWindowInfo();
+  if (active.hwnd != nullptr && IsUsableApplicationWindow(active.hwnd)) {
+    g_window_affinity["alias:" + key] = active.hwnd;
+    if (SetForegroundReliable(active.hwnd)) return true;
   }
   return false;
 }
