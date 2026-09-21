@@ -5167,7 +5167,6 @@ Get-Process | Where-Object {
               height: 42,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                reverse: true,
                 children: [
                 _addButton(icon: Icons.keyboard_alt_outlined, label: 'نص', onPressed: _running ? null : _addText, color: Colors.blue),
                 _addButton(icon: Icons.key, label: 'مفتاح', onPressed: _running ? null : _addKey, color: Colors.deepPurple),
