@@ -23,5 +23,6 @@ WindowInfo GetActiveWindowInfo();
 // Matching is case-insensitive and supports meaningful title fragments.
 bool WindowTitlesMatch(const std::string& actual_title, const std::string& requested_title);
 bool ActivateWindowByTitle(const std::string& target_title);
+bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback_title = "");
 
 #endif  // RUNNER_WINDOW_MANAGER_H_
