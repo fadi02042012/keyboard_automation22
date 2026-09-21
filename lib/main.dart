@@ -4159,6 +4159,7 @@ Get-Process | Where-Object {
                 final sourceWindow = step.previousWindow!.trim();
                 final sourceReady = await _waitForWindow(
                   sourceWindow,
+                  windowAlias: step.previousWindow?.trim() ?? '',
                   timeoutMs: 2500,
                 );
                 if (!sourceReady) {
