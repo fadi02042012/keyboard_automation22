@@ -328,3 +328,38 @@ bool ActivateWindowByTitle(const std::string& target_title) {
   }
   return SetForegroundReliable(hwnd);
 }
+
+bool ActivateWindowByAlias(const std::string& alias, const std::string& fallback_title) {
+  const std::string key = LowerAscii(alias);
+  if (key.empty()) return false;
+
+  const auto affinity = g_window_affinity.find("alias:" + key);
+  if (affinity != g_window_affinity.end()) {
+    const HWND cached = affinity->second;
+    if (IsUsableApplicationWindow(cached)) {
+      if (SetForegroundReliable(cached)) {
+        g_last_observed_window = cached;
+        return true;
+      }
+    } else {
+      g_window_affinity.erase(affinity);
+    }
+  }
+
+  // First use the currently active application window. This is the natural
+  // anchor when a recording/playback starts on a browser whose title changes.
+  const WindowInfo active = GetActiveWindowInfo();
+  if (active.hwnd != nullptr && IsUsableApplicationWindow(active.hwnd)) {
+    g_window_affinity["alias:" + key] = active.hwnd;
+    if (SetForegroundReliable(active.hwnd)) return true;
+  }
+
+  if (!fallback_title.empty() && ActivateWindowByTitle(fallback_title)) {
+    const WindowInfo resolved = GetActiveWindowInfo();
+    if (resolved.hwnd != nullptr) {
+      g_window_affinity["alias:" + key] = resolved.hwnd;
+      return true;
+    }
+  }
+  return false;
+}
