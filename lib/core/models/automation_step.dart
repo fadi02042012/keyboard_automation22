@@ -202,7 +202,7 @@ class AutomationStep {
           if (waitTimeoutMs != 5000) 'timeout': waitTimeoutMs,
           if (delayMs > 0) 'delay': delayMs,
         },
-        if (windowAlias.isNotEmpty) 'windowAlias': windowAlias,
+        if (windowAlias.isNotEmpty) 'windowId': windowAlias,
         if (windowMatch != 'title') 'windowMatch': windowMatch,
         if (windowChanged) 'windowChanged': true,
         if (previousWindow?.trim().isNotEmpty == true) 'previousWindow': previousWindow?.trim(),
@@ -267,7 +267,7 @@ class AutomationStep {
           text: producedText,
           delayMs: delayMs,
           targetWindow: recordedWindow,
-          windowAlias: asString(event['windowAlias'] ?? event['window_alias']),
+          windowAlias: asString(event['windowId'] ?? event['windowAlias'] ?? event['window_alias']),
           windowMatch: asString(event['windowMatch'] ?? event['window_match'], 'title'),
           windowChanged: windowChanged,
           previousWindow: previousWindow.isEmpty ? null : previousWindow,
@@ -329,7 +329,7 @@ class AutomationStep {
           delayMs: asInt(json['delay'] ?? json['delayMs'], 0, min: 0, max: 86400000),
           targetWindow: asString(json['window'] ?? json['targetWindow']).trim(),
 
-          windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
+          windowAlias: asString(json['windowId'] ?? json['windowAlias'] ?? json['window_alias']).trim(),
 
           windowMatch: asString(json['windowMatch'] ?? json['window_match'], 'title').trim().toLowerCase(),
           windowAlias: asString(json['windowAlias'] ?? json['window_alias']).trim(),
